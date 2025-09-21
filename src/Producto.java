@@ -1,11 +1,16 @@
 public class Producto {
-    private int tipo;
+    private int numeroTipo;
 
-    public Producto(int tipo) {
-        this.tipo = tipo;
+    public Producto(int numeroTipo) {
+        this.numeroTipo = numeroTipo;
     }
 
     public int getTipo() {
-        return tipo;
+        if (numeroTipo < 300)
+            return 1;
+        else if (numeroTipo < 600)
+            return 2;
+        else
+            return 3;
     }
 }
