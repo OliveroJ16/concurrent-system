@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
@@ -34,10 +33,10 @@ public class Main {
         // Crear la cinta de montaje
         CadenaMontaje cadenaMontaje = new CadenaMontaje(capacidadCadena, cantidadProductos);
 
-        // Crear contenedores por tipo de producto (thread-safe)
-        List<Producto> contenedor1 = Collections.synchronizedList(new ArrayList<>());
-        List<Producto> contenedor2 = Collections.synchronizedList(new ArrayList<>());
-        List<Producto> contenedor3 = Collections.synchronizedList(new ArrayList<>());
+        // Crear contenedores por tipo de producto (usando ArrayList normal)
+        List<Producto> contenedor1 = new ArrayList<>();
+        List<Producto> contenedor2 = new ArrayList<>();
+        List<Producto> contenedor3 = new ArrayList<>();
 
         // Crear colocadores: 2 por tipo
         Thread[] colocadores = new Thread[6];
@@ -93,14 +92,29 @@ public class Main {
         }
 
         // Log final
-        int totalEmpaquetado = contenedor1.size() + contenedor2.size() + contenedor3.size();
+        int totalEmpaquetado;
+        synchronized (contenedor1) {
+            synchronized (contenedor2) {
+                synchronized (contenedor3) {
+                    totalEmpaquetado = contenedor1.size() + contenedor2.size() + contenedor3.size();
+                }
+            }
+        }
         
         System.out.println("\n=== Resumen final ===");
         System.out.println("Total productos colocados: " + cadenaMontaje.getTotalAcomodados());
         System.out.println("Cantidad total de productos esperados: " + cantidadProductos);
-        System.out.println("Contenedor tipo 1: " + contenedor1.size());
-        System.out.println("Contenedor tipo 2: " + contenedor2.size());
-        System.out.println("Contenedor tipo 3: " + contenedor3.size());
+        
+        synchronized (contenedor1) {
+            System.out.println("Contenedor tipo 1: " + contenedor1.size());
+        }
+        synchronized (contenedor2) {
+            System.out.println("Contenedor tipo 2: " + contenedor2.size());
+        }
+        synchronized (contenedor3) {
+            System.out.println("Contenedor tipo 3: " + contenedor3.size());
+        }
+        
         System.out.println("Total productos empaquetados: " + totalEmpaquetado);
         
         // Verificación

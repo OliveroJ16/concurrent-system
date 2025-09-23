@@ -1,8 +1,8 @@
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CadenaMontaje {
-    private BlockingQueue<Producto> cinta;
+    private List<Producto> cinta;
     private int capacidad;
     private int totalAcomodados;
     private int totalEmpaquetados;
@@ -10,7 +10,7 @@ public class CadenaMontaje {
 
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
-        this.cinta = new LinkedBlockingQueue<>(capacidad);
+        this.cinta = new ArrayList<>();
         this.totalAcomodados = 0;
         this.totalEmpaquetados = 0;
         this.cantidadTotalProductos = cantidadTotalProductos;
@@ -47,9 +47,10 @@ public class CadenaMontaje {
     }
 
     public synchronized Producto retirarProducto(int tipo) {
-        for (Producto p : cinta) {
+        for (int i = 0; i < cinta.size(); i++) {
+            Producto p = cinta.get(i);
             if (p.getTipo() == tipo) {
-                cinta.remove(p);        // Retira el producto de la cinta
+                cinta.remove(i);        // Retira el producto de la cinta
                 totalEmpaquetados++;    // Actualiza contador
                 notifyAll();            // Notifica a los colocadores que hay espacio
                 return p;               // Devuelve el producto retirado
