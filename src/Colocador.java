@@ -30,14 +30,6 @@ public class Colocador extends Thread {
             if (!cinta.colocarProducto(producto)) {
                 break;
             }
-
-            // Pequeña pausa para evitar monopolizar recursos
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
         }
     }
 }

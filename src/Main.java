@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        final int capacidadCadena = 500;
+        final int capacidadCadena = 500; //establecer la capacidad en 500
         int cantidadProductos = 0;
         boolean entradaValida = false;
 

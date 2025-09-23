@@ -48,12 +48,12 @@ public class CadenaMontaje {
 
     public synchronized Producto retirarProducto(int tipo) {
         for (int i = 0; i < cinta.size(); i++) {
-            Producto p = cinta.get(i);
-            if (p.getTipo() == tipo) {
+            Producto proceso = cinta.get(i);
+            if (proceso.getTipo() == tipo) {
                 cinta.remove(i);        // Retira el producto de la cinta
                 totalEmpaquetados++;    // Actualiza contador
                 notifyAll();            // Notifica a los colocadores que hay espacio
-                return p;               // Devuelve el producto retirado
+                return proceso;               // Devuelve el producto retirado
             }
         }
         return null; // No hay productos de ese tipo en la cinta
