@@ -26,16 +26,18 @@ public class CadenaMontaje {
         // Esperar si la cinta está llena
         while (cinta.size() >= capacidad && totalAcomodados < cantidadTotalProductos) {
             try {
-                wait();
+                wait(); //se pone en espera hasta que haya espacio (hilo actual)
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
             }
         }
 
-        // Verificar nuevamente después de wait() (doble verificación)
+        /**
+         * Verificar nuevamente despues de wait() (doble verificacion)
+         * Correccion aqui para evitar sobrepasar el total*/
         if (totalAcomodados >= cantidadTotalProductos) {
-            notifyAll();
+            notifyAll(); // despertar empaquetadores para que empiecen a retirar
             return false;
         }
 

@@ -58,34 +58,34 @@ public class Main {
             empaquetadores[i] = new Empaquetador(tipo, cadenaMontaje, contenedor);
         }
 
-        // Iniciar todos los colocadores
-        for (Thread t : colocadores) {
-            t.start();
+        // iniciar todos los colocadores
+        for (Thread hilo : colocadores) {
+            hilo.start();
         }
 
-        // Iniciar todos los empaquetadores
-        for (Thread t : empaquetadores) {
-            t.start();
+        // iniciar todos los empaquetadores
+        for (Thread hilo : empaquetadores) {
+            hilo.start();
         }
 
         // Esperar a que los colocadores terminen
-        for (Thread t : colocadores) {
+        for (Thread hilo : colocadores) {
             try {
-                t.join();
+                hilo.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
         // Avisar a los empaquetadores que los colocadores han terminado
-        for (Thread t : empaquetadores) {
-            ((Empaquetador) t).setColocadoresTerminaron(true);
+        for (Thread hilo : empaquetadores) {
+            ((Empaquetador) hilo).setColocadoresTerminaron(true);
         }
 
         // Esperar a que los empaquetadores terminen
-        for (Thread t : empaquetadores) {
+        for (Thread hilo : empaquetadores) {
             try {
-                t.join();
+                hilo.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -116,20 +116,5 @@ public class Main {
         }
         
         System.out.println("Total productos empaquetados: " + totalEmpaquetado);
-        
-        // Verificación
-        if (cadenaMontaje.getTotalAcomodados() == cantidadProductos) {
-            System.out.println("✓ Cantidad de productos colocados CORRECTA");
-        } else {
-            System.out.println("✗ ERROR: Se colocaron " + cadenaMontaje.getTotalAcomodados() + 
-                             " productos pero se esperaban " + cantidadProductos);
-        }
-        
-        if (totalEmpaquetado == cantidadProductos) {
-            System.out.println("✓ Cantidad de productos empaquetados CORRECTA");
-        } else {
-            System.out.println("✗ ERROR: Se empaquetaron " + totalEmpaquetado + 
-                             " productos pero se esperaban " + cantidadProductos);
-        }
     }
 }

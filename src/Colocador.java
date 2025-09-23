@@ -14,7 +14,7 @@ public class Colocador extends Thread {
         Random random = new Random();
 
         while (true) {
-            // Verificar si ya se alcanzó el total antes de crear el producto
+            // Verificar si ya se alcanzo el total antes de crear el producto
             if (cinta.todosProductosColocados()) {
                 break;
             }

@@ -24,10 +24,10 @@ public class Empaquetador extends Thread {
     @Override
     public void run() {
         while (true) {
-            Producto p;
+            Producto producto;
             synchronized (cinta) {
                 // Espera mientras no haya producto de su tipo
-                while ((p = cinta.retirarProducto(tipo)) == null) {
+                while ((producto = cinta.retirarProducto(tipo)) == null) {
                     // Si los colocadores terminaron y la cinta está vacía, termina
                     if (colocadoresTerminaron && cinta.estaVacia()) {
                         return;
@@ -45,7 +45,7 @@ public class Empaquetador extends Thread {
 
             // Agrega el producto al contenedor compartido de su tipo
             synchronized (contenedor) {
-                contenedor.add(p);
+                contenedor.add(producto);
             }
         }
     }
