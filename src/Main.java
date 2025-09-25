@@ -17,7 +17,7 @@ public class Main {
                 System.out.print("\nIngrese el numero de productos: ");
                 cantidadProductos = scanner.nextInt();
 
-                if (cantidadProductos > 500) {
+                if (cantidadProductos > capacidadCadena ) {
                     entradaValida = true;
                     System.out.println("Cantidad de productos ingresada correctamente: " + cantidadProductos);
                 } else {

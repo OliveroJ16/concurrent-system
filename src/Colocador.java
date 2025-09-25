@@ -30,16 +30,6 @@ public class Colocador extends Thread {
             boolean colocado = false;
             while (!colocado && !cinta.todosProductosColocados()) {
                 colocado = cinta.colocarProducto(producto);
-                
-                if (!colocado) {
-                    // Pequeña pausa para evitar consumo excesivo de CPU
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-                }
             }
 
             // Si ya se alcanzó el total mientras intentaba colocar, salir

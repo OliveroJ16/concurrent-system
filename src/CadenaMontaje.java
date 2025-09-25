@@ -1,70 +1,91 @@
+import java.util.concurrent.locks.ReentrantLock;
+
 public class CadenaMontaje {
-    private Producto[] cinta;
-    private int capacidad;
-    private int totalAcomodados;
-    private int totalEmpaquetados;
-    private int cantidadTotalProductos;
+    private volatile Producto[] cinta;
+    private volatile ReentrantLock[] locks;   // un lock por posición
+    private final int capacidad;
+    private volatile int totalAcomodados;
+    private volatile int totalEmpaquetados;
+    private final int cantidadTotalProductos;
 
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
         this.cinta = new Producto[capacidad];
+        this.locks = new ReentrantLock[capacidad];
+        for (int i = 0; i < capacidad; i++) {
+            locks[i] = new ReentrantLock();
+        }
         this.totalAcomodados = 0;
         this.totalEmpaquetados = 0;
         this.cantidadTotalProductos = cantidadTotalProductos;
     }
 
-    public synchronized boolean colocarProducto(Producto producto) {
-        // Verificar si ya se alcanzó la cantidad total
+    public boolean colocarProducto(Producto producto) {
         if (totalAcomodados >= cantidadTotalProductos) {
             return false;
         }
 
-        // Buscar un espacio libre en el array (posición == null)
         for (int i = 0; i < capacidad; i++) {
-            if (cinta[i] == null) {
-                cinta[i] = producto;
-                totalAcomodados++;
-                return true;
+            if (locks[i].tryLock()) { // intenta bloquear la posición
+                try {
+                    if (cinta[i] == null && totalAcomodados < cantidadTotalProductos) {
+                        cinta[i] = producto;
+                        totalAcomodados++;
+                        return true;
+                    }
+                } finally {
+                    locks[i].unlock(); // siempre libera el lock
+                }
             }
         }
-        
-        return false; // No hay espacios libres
+        return false; // no hay posiciones libres disponibles
     }
 
-    public synchronized Producto retirarProducto(int tipo) {
+    public Producto retirarProducto(int tipo) {
         for (int i = 0; i < capacidad; i++) {
-            if (cinta[i] != null && cinta[i].getTipo() == tipo) {
-                Producto producto = cinta[i];
-                cinta[i] = null;        // Libera el espacio
-                totalEmpaquetados++;    // Actualiza contador
-                return producto;        // Devuelve el producto retirado
+            if (locks[i].tryLock()) {
+                try {
+                    if (cinta[i] != null && cinta[i].getTipo() == tipo) {
+                        Producto producto = cinta[i];
+                        cinta[i] = null;
+                        totalEmpaquetados++;
+                        return producto;
+                    }
+                } finally {
+                    locks[i].unlock();
+                }
             }
         }
-        return null; // No hay productos de ese tipo en la cinta
+        return null; // no hay productos del tipo buscado
     }
 
     public synchronized int getTotalAcomodados() {
-        return this.totalAcomodados;
+        return totalAcomodados;
     }
 
     public synchronized int getTotalEmpaquetados() {
-        return this.totalEmpaquetados;
+        return totalEmpaquetados;
     }
 
-    public synchronized boolean estaVacia() {
+    public boolean estaVacia() {
         for (int i = 0; i < capacidad; i++) {
-            if (cinta[i] != null) {
-                return false;
+            locks[i].lock();
+            try {
+                if (cinta[i] != null) {
+                    return false;
+                }
+            } finally {
+                locks[i].unlock();
             }
         }
         return true;
     }
 
     public int getCantidadTotal() {
-        return this.cantidadTotalProductos;
+        return cantidadTotalProductos;
     }
 
-    public synchronized boolean todosProductosColocados() {
+    public boolean todosProductosColocados() {
         return totalAcomodados >= cantidadTotalProductos;
     }
 }

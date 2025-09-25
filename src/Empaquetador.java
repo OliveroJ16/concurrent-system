@@ -32,14 +32,6 @@ public class Empaquetador extends Thread {
                 if (colocadoresTerminaron && cinta.estaVacia()) {
                     break;
                 }
-                
-                // Pequeña pausa para evitar consumo excesivo de CPU
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
             }
         }
     }
