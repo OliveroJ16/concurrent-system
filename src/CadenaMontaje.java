@@ -2,8 +2,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class CadenaMontaje {
     private volatile Producto[] cinta;
-    private volatile ReentrantLock[] locks;   // un lock por posición
-    private final ReentrantLock contadorLock = new ReentrantLock(); // Lock específico para totalAcomodados
+    private volatile ReentrantLock[] locks;   // un lock por posicion
+    private final ReentrantLock contadorLock = new ReentrantLock(); // Lock especifico para totalAcomodados
     private final int capacidad;
     private volatile int totalAcomodados;
     private volatile int totalEmpaquetados;
@@ -24,7 +24,7 @@ public class CadenaMontaje {
     }
 
     public boolean colocarProducto(Producto producto) {
-        // Primera verificación rápida sin lock
+        // Primera verificación rapida sin lock
         if (totalAcomodados >= cantidadTotalProductos) {
             return false;
         }
@@ -36,14 +36,14 @@ public class CadenaMontaje {
                     if (cinta[i] == null && totalAcomodados < cantidadTotalProductos) {
                         cinta[i] = producto;
                         
-                        // Usar lock específico para actualizar totalAcomodados de forma atómica
+                        // Usar lock específico para actualizar totalAcomodados
                         contadorLock.lock();
                         try {
-                            // Triple verificación para estar 100% seguro
+                            //Volver a verificar
                             if (totalAcomodados < cantidadTotalProductos) {
                                 totalAcomodados++;
                             } else {
-                                // Si ya se alcanzó el límite, revertir la colocación
+                                // Si se alcanzo el linmite, revertir la colocación
                                 cinta[i] = null;
                                 return false;
                             }
@@ -51,7 +51,7 @@ public class CadenaMontaje {
                             contadorLock.unlock();
                         }
                         
-                        // Verificar si la cinta está completamente llena para activar empaquetadores
+                        // Verificar si la cinta esta completamente llena para activar empaquetadores
                         if (!empaquetadoresPuedenTrabajar) {
                             boolean llena = true;
                             for (int j = 0; j < capacidad; j++) {
@@ -68,7 +68,7 @@ public class CadenaMontaje {
                         return true;
                     }
                 } finally {
-                    locks[i].unlock(); // siempre libera el lock
+                    locks[i].unlock(); // siempre liberar el lock
                 }
             }
         }
