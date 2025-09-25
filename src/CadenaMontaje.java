@@ -3,10 +3,12 @@ import java.util.concurrent.locks.ReentrantLock;
 public class CadenaMontaje {
     private volatile Producto[] cinta;
     private volatile ReentrantLock[] locks;   // un lock por posición
+    private final ReentrantLock contadorLock = new ReentrantLock(); // Lock específico para totalAcomodados
     private final int capacidad;
     private volatile int totalAcomodados;
     private volatile int totalEmpaquetados;
     private final int cantidadTotalProductos;
+    private volatile boolean empaquetadoresPuedenTrabajar = false; // Se activa cuando la cinta se llena por primera vez
 
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
@@ -18,9 +20,11 @@ public class CadenaMontaje {
         this.totalAcomodados = 0;
         this.totalEmpaquetados = 0;
         this.cantidadTotalProductos = cantidadTotalProductos;
+        this.empaquetadoresPuedenTrabajar = false;
     }
 
     public boolean colocarProducto(Producto producto) {
+        // Primera verificación rápida sin lock
         if (totalAcomodados >= cantidadTotalProductos) {
             return false;
         }
@@ -28,9 +32,39 @@ public class CadenaMontaje {
         for (int i = 0; i < capacidad; i++) {
             if (locks[i].tryLock()) { // intenta bloquear la posición
                 try {
+                    // Segunda verificación dentro del lock para evitar race condition
                     if (cinta[i] == null && totalAcomodados < cantidadTotalProductos) {
                         cinta[i] = producto;
-                        totalAcomodados++;
+                        
+                        // Usar lock específico para actualizar totalAcomodados de forma atómica
+                        contadorLock.lock();
+                        try {
+                            // Triple verificación para estar 100% seguro
+                            if (totalAcomodados < cantidadTotalProductos) {
+                                totalAcomodados++;
+                            } else {
+                                // Si ya se alcanzó el límite, revertir la colocación
+                                cinta[i] = null;
+                                return false;
+                            }
+                        } finally {
+                            contadorLock.unlock();
+                        }
+                        
+                        // Verificar si la cinta está completamente llena para activar empaquetadores
+                        if (!empaquetadoresPuedenTrabajar) {
+                            boolean llena = true;
+                            for (int j = 0; j < capacidad; j++) {
+                                if (cinta[j] == null) {
+                                    llena = false;
+                                    break;
+                                }
+                            }
+                            if (llena) {
+                                empaquetadoresPuedenTrabajar = true;
+                            }
+                        }
+                        
                         return true;
                     }
                 } finally {
@@ -42,6 +76,11 @@ public class CadenaMontaje {
     }
 
     public Producto retirarProducto(int tipo) {
+        // Solo permitir retirar si los empaquetadores ya pueden trabajar
+        if (!empaquetadoresPuedenTrabajar) {
+            return null;
+        }
+        
         for (int i = 0; i < capacidad; i++) {
             if (locks[i].tryLock()) {
                 try {
