@@ -15,37 +15,31 @@ public class Empaquetador extends Thread {
 
     public void setColocadoresTerminaron(boolean terminado) {
         this.colocadoresTerminaron = terminado;
-        // Despertar a todos los empaquetadores cuando se notifica que terminaron
-        synchronized (cinta) {
-            cinta.notifyAll();
-        }
     }
 
     @Override
     public void run() {
         while (true) {
-            Producto producto;
-            synchronized (cinta) {
-                // Espera mientras no haya producto de su tipo
-                while ((producto = cinta.retirarProducto(tipo)) == null) {
-                    // Si los colocadores terminaron y la cinta está vacía, termina
-                    if (colocadoresTerminaron && cinta.estaVacia()) {
-                        return;
-                    }
-                    try {
-                        cinta.wait();
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
+            Producto producto = cinta.retirarProducto(tipo);
+            
+            if (producto != null) {
+                // Agrega el producto al contenedor compartido de su tipo
+                synchronized (contenedor) {
+                    contenedor.add(producto);
                 }
-                // Producto retirado, notifica a los colocadores
-                cinta.notifyAll();
-            }
-
-            // Agrega el producto al contenedor compartido de su tipo
-            synchronized (contenedor) {
-                contenedor.add(producto);
+            } else {
+                // Si no hay producto de su tipo, verificar si debe terminar
+                if (colocadoresTerminaron && cinta.estaVacia()) {
+                    break;
+                }
+                
+                // Pequeña pausa para evitar consumo excesivo de CPU
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
         }
     }

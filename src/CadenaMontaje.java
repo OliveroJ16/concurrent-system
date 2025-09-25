@@ -1,8 +1,5 @@
-import java.util.ArrayList;
-import java.util.List;
-
 public class CadenaMontaje {
-    private List<Producto> cinta;
+    private Producto[] cinta;
     private int capacidad;
     private int totalAcomodados;
     private int totalEmpaquetados;
@@ -10,52 +7,37 @@ public class CadenaMontaje {
 
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
-        this.cinta = new ArrayList<>();
+        this.cinta = new Producto[capacidad];
         this.totalAcomodados = 0;
         this.totalEmpaquetados = 0;
         this.cantidadTotalProductos = cantidadTotalProductos;
     }
 
     public synchronized boolean colocarProducto(Producto producto) {
-        // Verificar si ya se alcanzó la cantidad total ANTES de colocar
+        // Verificar si ya se alcanzó la cantidad total
         if (totalAcomodados >= cantidadTotalProductos) {
-            notifyAll(); // despertar empaquetadores que puedan estar esperando
             return false;
         }
 
-        // Esperar si la cinta está llena
-        while (cinta.size() >= capacidad && totalAcomodados < cantidadTotalProductos) {
-            try {
-                wait(); //se pone en espera hasta que haya espacio (hilo actual)
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
+        // Buscar un espacio libre en el array (posición == null)
+        for (int i = 0; i < capacidad; i++) {
+            if (cinta[i] == null) {
+                cinta[i] = producto;
+                totalAcomodados++;
+                return true;
             }
         }
-
-        /**
-         * Verificar nuevamente despues de wait() (doble verificacion)
-         * Correccion aqui para evitar sobrepasar el total*/
-        if (totalAcomodados >= cantidadTotalProductos) {
-            notifyAll(); // despertar empaquetadores para que empiecen a retirar
-            return false;
-        }
-
-        // Colocar producto
-        cinta.add(producto);
-        totalAcomodados++;
-        notifyAll(); // despertar empaquetadores
-        return true;
+        
+        return false; // No hay espacios libres
     }
 
     public synchronized Producto retirarProducto(int tipo) {
-        for (int i = 0; i < cinta.size(); i++) {
-            Producto proceso = cinta.get(i);
-            if (proceso.getTipo() == tipo) {
-                cinta.remove(i);        // Retira el producto de la cinta
+        for (int i = 0; i < capacidad; i++) {
+            if (cinta[i] != null && cinta[i].getTipo() == tipo) {
+                Producto producto = cinta[i];
+                cinta[i] = null;        // Libera el espacio
                 totalEmpaquetados++;    // Actualiza contador
-                notifyAll();            // Notifica a los colocadores que hay espacio
-                return proceso;               // Devuelve el producto retirado
+                return producto;        // Devuelve el producto retirado
             }
         }
         return null; // No hay productos de ese tipo en la cinta
@@ -70,7 +52,12 @@ public class CadenaMontaje {
     }
 
     public synchronized boolean estaVacia() {
-        return cinta.isEmpty();
+        for (int i = 0; i < capacidad; i++) {
+            if (cinta[i] != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public int getCantidadTotal() {

@@ -14,7 +14,7 @@ public class Colocador extends Thread {
         Random random = new Random();
 
         while (true) {
-            // Verificar si ya se alcanzo el total antes de crear el producto
+            // Verificar si ya se alcanzó el total antes de crear el producto
             if (cinta.todosProductosColocados()) {
                 break;
             }
@@ -26,8 +26,24 @@ public class Colocador extends Thread {
             };
             Producto producto = new Producto(numero);
 
-            // Intenta colocar producto; si retorna false, ya se alcanzó el total
-            if (!cinta.colocarProducto(producto)) {
+            // Intentar colocar producto continuamente hasta lograrlo o hasta que se alcance el total
+            boolean colocado = false;
+            while (!colocado && !cinta.todosProductosColocados()) {
+                colocado = cinta.colocarProducto(producto);
+                
+                if (!colocado) {
+                    // Pequeña pausa para evitar consumo excesivo de CPU
+                    try {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+            }
+
+            // Si ya se alcanzó el total mientras intentaba colocar, salir
+            if (cinta.todosProductosColocados()) {
                 break;
             }
         }
