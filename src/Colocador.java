@@ -2,7 +2,7 @@ import java.util.Random;
 
 public class Colocador extends Thread {
     private final CadenaMontaje cinta;
-    private final int tipo; // tipo del colocador
+    private final int tipo;
 
     public Colocador(int tipo, CadenaMontaje cinta) {
         this.cinta = cinta;
@@ -14,7 +14,6 @@ public class Colocador extends Thread {
         Random random = new Random();
 
         while (true) {
-            // Verificar si ya se alcanzó el total antes de crear el producto
             if (cinta.todosProductosColocados()) {
                 break;
             }
@@ -26,13 +25,11 @@ public class Colocador extends Thread {
             };
             Producto producto = new Producto(numero);
 
-            // Intentar colocar producto continuamente hasta lograrlo o hasta que se alcance el total
             boolean colocado = false;
             while (!colocado && !cinta.todosProductosColocados()) {
                 colocado = cinta.colocarProducto(producto);
             }
 
-            // Si ya se alcanzó el total mientras intentaba colocar, salir
             if (cinta.todosProductosColocados()) {
                 break;
             }

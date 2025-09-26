@@ -1,120 +1,92 @@
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CadenaMontaje {
-    private volatile Producto[] cinta;
-    private volatile ReentrantLock[] locks;   // un lock por posicion
-    private final ReentrantLock contadorLock = new ReentrantLock(); // Lock especifico para totalAcomodados
+    private final Producto[] cinta;
+    private final Object[] locks;
     private final int capacidad;
-    private volatile int totalAcomodados;
-    private volatile int totalEmpaquetados;
+    private final AtomicInteger totalAcomodados; 
+    private final AtomicInteger totalEmpaquetados;
     private final int cantidadTotalProductos;
-    private volatile boolean empaquetadoresPuedenTrabajar = false; // Se activa cuando la cinta se llena por primera vez
+    private volatile boolean empaquetadoresPuedenTrabajar = false;
 
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
         this.cinta = new Producto[capacidad];
-        this.locks = new ReentrantLock[capacidad];
+        this.locks = new Object[capacidad];
         for (int i = 0; i < capacidad; i++) {
-            locks[i] = new ReentrantLock();
+            locks[i] = new Object();
         }
-        this.totalAcomodados = 0;
-        this.totalEmpaquetados = 0;
+        this.totalAcomodados = new AtomicInteger(0);
+        this.totalEmpaquetados = new AtomicInteger(0);
         this.cantidadTotalProductos = cantidadTotalProductos;
-        this.empaquetadoresPuedenTrabajar = false;
     }
 
     public boolean colocarProducto(Producto producto) {
-        // Primera verificación rapida sin lock
-        if (totalAcomodados >= cantidadTotalProductos) {
+        if (totalAcomodados.get() >= cantidadTotalProductos) {
             return false;
         }
 
         for (int i = 0; i < capacidad; i++) {
-            if (locks[i].tryLock()) { // intenta bloquear la posición
-                try {
-                    // Segunda verificación dentro del lock para evitar race condition
-                    if (cinta[i] == null && totalAcomodados < cantidadTotalProductos) {
-                        cinta[i] = producto;
-                        
-                        // Usar lock específico para actualizar totalAcomodados
-                        contadorLock.lock();
-                        try {
-                            //Volver a verificar
-                            if (totalAcomodados < cantidadTotalProductos) {
-                                totalAcomodados++;
-                            } else {
-                                // Si se alcanzo el linmite, revertir la colocación
-                                cinta[i] = null;
-                                return false;
-                            }
-                        } finally {
-                            contadorLock.unlock();
-                        }
-                        
-                        // Verificar si la cinta esta completamente llena para activar empaquetadores
-                        if (!empaquetadoresPuedenTrabajar) {
-                            boolean llena = true;
-                            for (int j = 0; j < capacidad; j++) {
-                                if (cinta[j] == null) {
-                                    llena = false;
-                                    break;
-                                }
-                            }
-                            if (llena) {
-                                empaquetadoresPuedenTrabajar = true;
-                            }
-                        }
-                        
-                        return true;
+            synchronized (locks[i]) {
+                if (cinta[i] == null && totalAcomodados.get() < cantidadTotalProductos) {
+                    cinta[i] = producto;
+
+                    if (totalAcomodados.incrementAndGet() > cantidadTotalProductos) {
+                        cinta[i] = null; // revertir si se pasa del limite
+                        return false;
                     }
-                } finally {
-                    locks[i].unlock(); // siempre liberar el lock
+
+                    if (!empaquetadoresPuedenTrabajar) {
+                        boolean llena = true;
+                        for (int j = 0; j < capacidad; j++) {
+                            if (cinta[j] == null) {
+                                llena = false;
+                                break;
+                            }
+                        }
+                        if (llena) {
+                            empaquetadoresPuedenTrabajar = true;
+                        }
+                    }
+                    return true;
                 }
             }
         }
-        return false; // no hay posiciones libres disponibles
+        return false;
     }
 
     public Producto retirarProducto(int tipo) {
-        // Solo permitir retirar si los empaquetadores ya pueden trabajar
         if (!empaquetadoresPuedenTrabajar) {
             return null;
         }
-        
+
         for (int i = 0; i < capacidad; i++) {
-            if (locks[i].tryLock()) {
-                try {
-                    if (cinta[i] != null && cinta[i].getTipo() == tipo) {
-                        Producto producto = cinta[i];
-                        cinta[i] = null;
-                        totalEmpaquetados++;
-                        return producto;
-                    }
-                } finally {
-                    locks[i].unlock();
+            synchronized (locks[i]) {
+                if (cinta[i] != null && cinta[i].getTipo() == tipo) {
+                    Producto producto = cinta[i];
+                    cinta[i] = null;
+                    totalEmpaquetados.incrementAndGet();
+                    return producto;
                 }
             }
         }
-        return null; // no hay productos del tipo buscado
+        return null;
     }
 
-    public synchronized int getTotalAcomodados() {
-        return totalAcomodados;
+    public int getTotalAcomodados() {
+        return totalAcomodados.get();
     }
 
-    public synchronized int getTotalEmpaquetados() {
-        return totalEmpaquetados;
+    public int getTotalEmpaquetados() {
+        return totalEmpaquetados.get();
     }
 
     public boolean estaVacia() {
         for (int i = 0; i < capacidad; i++) {
-            locks[i].lock();
-            try {
+            synchronized (locks[i]) {
                 if (cinta[i] != null) {
                     return false;
                 }
-            } finally {
-                locks[i].unlock();
             }
         }
         return true;
@@ -125,6 +97,6 @@ public class CadenaMontaje {
     }
 
     public boolean todosProductosColocados() {
-        return totalAcomodados >= cantidadTotalProductos;
+        return totalAcomodados.get() >= cantidadTotalProductos;
     }
 }

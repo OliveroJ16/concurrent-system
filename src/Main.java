@@ -11,7 +11,7 @@ public class Main {
         int cantidadProductos = 0;
         boolean entradaValida = false;
 
-        // Solicitar número de productos
+        // Solicitar numero de productos
         do {
             try {
                 System.out.print("\nIngrese el numero de productos: ");
