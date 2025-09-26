@@ -30,10 +30,13 @@ public class Main {
         } while (!entradaValida);
         scanner.close();
 
+        // tiempo de inicio
+        long tiempoInicio = System.currentTimeMillis();
+
         // Crear la cinta de montaje
         CadenaMontaje cadenaMontaje = new CadenaMontaje(capacidadCadena, cantidadProductos);
 
-        // Crear contenedores por tipo de producto (usando ArrayList normal)
+        // Crear contenedores por tipo de producto
         List<Producto> contenedor1 = new ArrayList<>();
         List<Producto> contenedor2 = new ArrayList<>();
         List<Producto> contenedor3 = new ArrayList<>();
@@ -91,6 +94,10 @@ public class Main {
             }
         }
 
+        // fin del tiempo
+        long tiempoFin = System.currentTimeMillis();
+        long tiempoTotal = tiempoFin - tiempoInicio;
+
         // Log final
         int totalEmpaquetado = contenedor1.size() + contenedor2.size() + contenedor3.size();
         
@@ -107,7 +114,10 @@ public class Main {
             System.out.println("Contenedor tipo 3: " + contenedor3.size());
         }
         
-        System.out.println("Total productos empaquetados (varible compartida): " + cadenaMontaje.getTotalEmpaquetados());
+        System.out.println("Total productos empaquetados (variable compartida): " + cadenaMontaje.getTotalEmpaquetados());
         System.out.println("Total productos empaquetados (sumando por tipos): " + totalEmpaquetado);
+        
+        System.out.println("\n=== TIEMPO DE EJECUCIÓN ===");
+        System.out.println("Tiempo total de ejecución: " + (tiempoTotal / 1000.0) + " segundos");
     }
 }
