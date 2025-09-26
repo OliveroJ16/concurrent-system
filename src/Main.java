@@ -92,18 +92,10 @@ public class Main {
         }
 
         // Log final
-        int totalEmpaquetado;
-        synchronized (contenedor1) {
-            synchronized (contenedor2) {
-                synchronized (contenedor3) {
-                    totalEmpaquetado = contenedor1.size() + contenedor2.size() + contenedor3.size();
-                }
-            }
-        }
+        int totalEmpaquetado = contenedor1.size() + contenedor2.size() + contenedor3.size();
         
         System.out.println("\n=== Resumen final ===");
         System.out.println("Total productos colocados: " + cadenaMontaje.getTotalAcomodados());
-        System.out.println("Cantidad total de productos esperados: " + cantidadProductos);
         
         synchronized (contenedor1) {
             System.out.println("Contenedor tipo 1: " + contenedor1.size());
@@ -115,6 +107,7 @@ public class Main {
             System.out.println("Contenedor tipo 3: " + contenedor3.size());
         }
         
-        System.out.println("Total productos empaquetados: " + totalEmpaquetado);
+        System.out.println("Total productos empaquetados (varible compartida): " + cadenaMontaje.getTotalEmpaquetados());
+        System.out.println("Total productos empaquetados (sumando por tipos): " + totalEmpaquetado);
     }
 }
