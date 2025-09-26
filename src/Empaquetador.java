@@ -19,8 +19,8 @@ public class Empaquetador extends Thread {
 
     @Override
     public void run() {
-
-        while (true) {
+        boolean terminarHilo = true;
+        while (terminarHilo) {
             Producto producto = cinta.retirarProducto(tipo);
 
             if (producto != null) {
@@ -29,7 +29,7 @@ public class Empaquetador extends Thread {
                 }
             } else {
                 if (colocadoresTerminaron && cinta.estaVacia()) {
-                    break;
+                    terminarHilo = false;
                 }
             }
         }
