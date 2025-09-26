@@ -33,7 +33,7 @@ public class Main {
         // Crear la cinta de montaje
         CadenaMontaje cadenaMontaje = new CadenaMontaje(capacidadCadena, cantidadProductos);
 
-        // Crear contenedores por tipo de producto (usando ArrayList normal)
+        // Crear contenedores por tipo de producto
         List<Producto> contenedor1 = new ArrayList<>();
         List<Producto> contenedor2 = new ArrayList<>();
         List<Producto> contenedor3 = new ArrayList<>();

@@ -2,7 +2,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CadenaMontaje {
     private final Producto[] cinta;
-    private final Object[] locks;
     private final int capacidad;
     private final AtomicInteger totalAcomodados; 
     private final AtomicInteger totalEmpaquetados;
@@ -12,30 +11,29 @@ public class CadenaMontaje {
     public CadenaMontaje(int capacidad, int cantidadTotalProductos) {
         this.capacidad = capacidad;
         this.cinta = new Producto[capacidad];
-        this.locks = new Object[capacidad];
-        for (int i = 0; i < capacidad; i++) {
-            locks[i] = new Object();
-        }
         this.totalAcomodados = new AtomicInteger(0);
         this.totalEmpaquetados = new AtomicInteger(0);
         this.cantidadTotalProductos = cantidadTotalProductos;
     }
 
     public boolean colocarProducto(Producto producto) {
-        if (totalAcomodados.get() >= cantidadTotalProductos) {
-            return false;
-        }
+        synchronized (cinta) { // Solo un hilo puede acceder a la cinta
+            if (totalAcomodados.get() >= cantidadTotalProductos) {
+                return false;
+            }
 
-        for (int i = 0; i < capacidad; i++) {
-            synchronized (locks[i]) {
+            // Buscar una posicion vacia en la cinta
+            for (int i = 0; i < capacidad; i++) {
                 if (cinta[i] == null && totalAcomodados.get() < cantidadTotalProductos) {
                     cinta[i] = producto;
 
                     if (totalAcomodados.incrementAndGet() > cantidadTotalProductos) {
-                        cinta[i] = null; // revertir si se pasa del limite
+                        cinta[i] = null; // revertir si se pasa del límite
+                        totalAcomodados.decrementAndGet();
                         return false;
                     }
 
+                    // Verificar si la cinta está llena para habilitar empaquetadores
                     if (!empaquetadoresPuedenTrabajar) {
                         boolean llena = true;
                         for (int j = 0; j < capacidad; j++) {
@@ -51,17 +49,18 @@ public class CadenaMontaje {
                     return true;
                 }
             }
+            return false; // No hay espacio disponible
         }
-        return false;
     }
 
     public Producto retirarProducto(int tipo) {
-        if (!empaquetadoresPuedenTrabajar) {
-            return null;
-        }
+        synchronized (cinta) { // Solo un hilo puede acceder a la cinta
+            if (!empaquetadoresPuedenTrabajar) {
+                return null;
+            }
 
-        for (int i = 0; i < capacidad; i++) {
-            synchronized (locks[i]) {
+            // Buscar un producto del tipo solicitado
+            for (int i = 0; i < capacidad; i++) {
                 if (cinta[i] != null && cinta[i].getTipo() == tipo) {
                     Producto producto = cinta[i];
                     cinta[i] = null;
@@ -69,8 +68,8 @@ public class CadenaMontaje {
                     return producto;
                 }
             }
+            return null; // No se encontro producto del tipo solicitado
         }
-        return null;
     }
 
     public int getTotalAcomodados() {
@@ -82,14 +81,14 @@ public class CadenaMontaje {
     }
 
     public boolean estaVacia() {
-        for (int i = 0; i < capacidad; i++) {
-            synchronized (locks[i]) {
+        synchronized (cinta) {
+            for (int i = 0; i < capacidad; i++) {
                 if (cinta[i] != null) {
                     return false;
                 }
             }
+            return true;
         }
-        return true;
     }
 
     public int getCantidadTotal() {
