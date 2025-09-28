@@ -11,6 +11,8 @@ public class Main {
         int cantidadProductos = 0;
         boolean entradaValida = false;
 
+        System.out.println("\n--VERSION ASINCRONICA--");
+
         // Solicitar numero de productos
         do {
             try {
