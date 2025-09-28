@@ -118,6 +118,6 @@ public class Main {
         System.out.println("Total productos empaquetados (sumando por tipos): " + totalEmpaquetado);
         
         System.out.println("\n=== TIEMPO DE EJECUCIÓN ===");
-        System.out.println("Tiempo total de ejecución: " + (tiempoTotal / 1000.0) + " segundos");
+        System.out.println("Tiempo total de ejecución: " + tiempoTotal + " ms");
     }
 }
