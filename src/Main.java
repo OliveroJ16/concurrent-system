@@ -44,14 +44,14 @@ public class Main {
         List<Producto> contenedor3 = new ArrayList<>();
 
         // Crear colocadores: 2 por tipo
-        Thread[] colocadores = new Thread[6];
+        Colocador[] colocadores = new Colocador[6];
         for (int i = 0; i < 6; i++) {
             int tipo = (i / 2) + 1;
             colocadores[i] = new Colocador(tipo, cadenaMontaje);
         }
 
         // Crear empaquetadores: 2 por tipo
-        Thread[] empaquetadores = new Thread[6];
+        Empaquetador[] empaquetadores = new Empaquetador[6];
         for (int i = 0; i < 6; i++) {
             int tipo = (i / 2) + 1;
             List<Producto> contenedor;
@@ -64,33 +64,33 @@ public class Main {
         }
 
         // iniciar todos los colocadores
-        for (Thread hilo : colocadores) {
-            hilo.start();
+        for (Colocador colocador : colocadores) {
+            colocador.start();
         }
 
         // iniciar todos los empaquetadores
-        for (Thread hilo : empaquetadores) {
-            hilo.start();
+        for (Empaquetador empaquetador : empaquetadores) {
+            empaquetador.start();
         }
 
         // Esperar a que los colocadores terminen
-        for (Thread hilo : colocadores) {
+        for (Colocador colocador : colocadores) {
             try {
-                hilo.join();
+                colocador.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
         // Avisar a los empaquetadores que los colocadores han terminado
-        for (Thread hilo : empaquetadores) {
-            ((Empaquetador) hilo).setColocadoresTerminaron(true);
+        for (Empaquetador empaquetador : empaquetadores) {
+            empaquetador.setColocadoresTerminaron(true);
         }
 
         // Esperar a que los empaquetadores terminen
-        for (Thread hilo : empaquetadores) {
+        for (Empaquetador empaquetador : empaquetadores) {
             try {
-                hilo.join();
+                empaquetador.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
